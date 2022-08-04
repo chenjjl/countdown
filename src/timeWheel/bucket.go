@@ -23,3 +23,14 @@ func (b *bucket) Add(event *Event) error {
 	event.bucket = b
 	return nil
 }
+
+func (b *bucket) Lookup() (*Event, error) {
+	for e := b.events.Front(); e != nil; e = e.Next() {
+		event := (e.Value).(*Event)
+		if event.curRound == event.round {
+			return event, nil
+		}
+		event.curRound += 1
+	}
+	return nil, nil
+}

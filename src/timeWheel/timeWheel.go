@@ -14,8 +14,10 @@ type TimeWheel struct {
 	tick        uint64
 	wheelSize   uint64
 	buckets     *list.List
+	curBucket   *list.Element
 	bucketIndex uint64
 	head        *list.Element
+	c           chan *Event
 	mu          sync.Mutex
 }
 
@@ -37,7 +39,24 @@ func NewTimeWheel(tick time.Duration, wheelSize uint64) *TimeWheel {
 		wheelSize:   wheelSize,
 		buckets:     buckets,
 		bucketIndex: 1,
+		curBucket:   buckets.Front(),
 		head:        buckets.Front(),
+		c:           make(chan *Event),
+	}
+}
+
+func (t *TimeWheel) Start() {
+	ticker := time.NewTicker(time.Duration(t.tick) * time.Millisecond)
+	defer ticker.Stop()
+	log.Infof("ticker has started, tick is %dms", t.tick)
+	for {
+		select {
+		case <-ticker.C:
+			event, ok := t.Lookup()
+			if ok {
+				t.c <- event
+			}
+		}
 	}
 }
 
@@ -57,4 +76,23 @@ func (t *TimeWheel) Add(event *Event) error {
 		return err
 	}
 	return nil
+}
+
+func (t *TimeWheel) Lookup() (*Event, bool) {
+	t.bucketIndex += 1
+	t.curBucket = t.curBucket.Next()
+	// circle queue
+	if t.curBucket == nil {
+		t.curBucket = t.head
+	}
+	bucket := (t.curBucket.Value).(*bucket)
+	event, err := bucket.Lookup()
+	if err != nil {
+		log.Error(err)
+		return nil, false
+	}
+	if event == nil {
+		return nil, false
+	}
+	return event, true
 }

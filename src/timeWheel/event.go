@@ -8,6 +8,7 @@ import (
 type Event struct {
 	bucket     *bucket
 	round      uint64
+	curRound   uint64
 	expiration uint64
 
 	topic string
@@ -25,6 +26,7 @@ func NewEvent(topic string, tags string, expiration time.Duration) (*Event, erro
 	return &Event{
 		bucket:     nil,
 		round:      0,
+		curRound:   0,
 		expiration: _expiration,
 
 		topic: topic,
