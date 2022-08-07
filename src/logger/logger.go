@@ -20,5 +20,6 @@ func GetLogger(name string) *logger {
 
 func newLogger(name string) *logger {
 	logger := &logger{Logger: *logrus.New(), name: name}
+	logger.SetReportCaller(true)
 	return logger
 }

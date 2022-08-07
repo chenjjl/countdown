@@ -1,35 +1,39 @@
 package timeWheel
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 )
 
 type Event struct {
-	bucket     *bucket
-	round      uint64
-	curRound   uint64
-	expiration uint64
+	element
 
-	topic string
-	tags  string
+	Topic string
+	Tags  string
 }
 
 func NewEvent(topic string, tags string, expiration time.Duration) (*Event, error) {
 	if topic == "" || tags == "" {
-		return nil, errors.New("topic or tags is empty")
+		return nil, errors.New("Topic or Tags is empty")
 	}
 	_expiration := uint64(expiration / time.Millisecond)
 	if _expiration <= 0 {
-		return nil, errors.New("expiration of event must be greater than 0ms")
+		return nil, errors.New("Expiration of event must be greater than 0ms")
 	}
 	return &Event{
-		bucket:     nil,
-		round:      0,
-		curRound:   0,
-		expiration: _expiration,
+		element: element{
+			round:      0,
+			curRound:   0,
+			Expiration: _expiration,
+		},
 
-		topic: topic,
-		tags:  tags,
+		Topic: topic,
+		Tags:  tags,
 	}, nil
+}
+
+func (e *Event) toString() string {
+	data, _ := json.Marshal(e)
+	return string(data)
 }
