@@ -43,7 +43,7 @@ func TestLittleHandTimeWheel_Lookup(t *testing.T) {
 		_event := <-lilTimeWheel.c
 		i += 1
 		end := time.Now().UnixMilli()
-		t.Logf("Expiration of event is %d, offset is %d", _event.Expiration, end-start)
+		t.Logf("expected expiration is %d, actual expiration is %d", _event.Expiration, end-start)
 		totalOffset += int64(math.Abs(float64(end-start))) - int64(_event.Expiration)
 	}
 	t.Logf("total message num is %d, average offset is %d", n, totalOffset/int64(n))

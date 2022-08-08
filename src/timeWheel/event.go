@@ -11,6 +11,8 @@ type Event struct {
 
 	Topic string
 	Tags  string
+
+	AddBhUnix int64 // unix of event been added to big hand time wheel
 }
 
 func NewEvent(topic string, tags string, expiration time.Duration) (*Event, error) {

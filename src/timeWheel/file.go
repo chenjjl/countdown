@@ -71,6 +71,7 @@ func (f *File) addEvent(event *Event) error {
 	if err != nil {
 		return err
 	}
+	event.AddBhUnix = time.Now().UnixMilli()
 	_, err = file.WriteString(event.toString() + ",")
 	if err != nil {
 		return err
@@ -78,7 +79,7 @@ func (f *File) addEvent(event *Event) error {
 	return nil
 }
 
-func (f *File) getEvents() ([]*Event, error) {
+func (f *File) getEvents(tickUnix int64) ([]*Event, error) {
 	data, err := os.ReadFile(dirName + f.fileName)
 	if err != nil {
 		return nil, err
@@ -89,7 +90,7 @@ func (f *File) getEvents() ([]*Event, error) {
 		return nil, err
 	}
 	for _, event := range eventArr {
-		event.Expiration = event.Expiration % (f.tick * uint64(time.Second.Milliseconds()))
+		event.Expiration = event.Expiration%(f.tick*uint64(time.Second.Milliseconds())) + uint64(event.AddBhUnix-tickUnix)
 	}
 	return eventArr, nil
 }

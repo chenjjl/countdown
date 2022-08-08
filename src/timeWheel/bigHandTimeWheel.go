@@ -10,7 +10,7 @@ type bigHandTimeWheel struct {
 	wheel
 
 	*littleHandTimeWheel
-	unix int64
+	tickUnix int64 // unix of each tick
 }
 
 func NewBigHandTimeWheel(tick time.Duration, wheelSize uint64, lilHandTimeWheel *littleHandTimeWheel) *bigHandTimeWheel {
@@ -42,7 +42,7 @@ func NewBigHandTimeWheel(tick time.Duration, wheelSize uint64, lilHandTimeWheel 
 func (t *bigHandTimeWheel) Start() {
 	ticker := time.NewTicker(time.Duration(t.tick) * time.Second)
 	defer ticker.Stop()
-	t.unix = time.Now().Unix()
+	t.tickUnix = time.Now().UnixMilli()
 	log.Infof("big hand's ticker has started, tick is %d sec", t.tick)
 	for {
 		select {
@@ -55,7 +55,7 @@ func (t *bigHandTimeWheel) Start() {
 func (t *bigHandTimeWheel) doLookup() {
 	file, ok := t.Lookup()
 	if ok {
-		events, err := file.getEvents()
+		events, err := file.getEvents(t.tickUnix)
 		if err != nil {
 			log.Error(err)
 		}
@@ -66,6 +66,7 @@ func (t *bigHandTimeWheel) doLookup() {
 		// fixme debug
 		log.Infof("big hand time wheel lookup")
 	}
+	t.tickUnix = time.Now().UnixMilli()
 }
 
 func (t *bigHandTimeWheel) Add(event *Event) error {
@@ -86,7 +87,7 @@ func (t *bigHandTimeWheel) Add(event *Event) error {
 		return err
 	}
 	if file == nil {
-		file, err = createFile(time.Duration(_expiration)*time.Second, e/t.wheelSize, t.unix, t.tick)
+		file, err = createFile(time.Duration(_expiration)*time.Second, e/t.wheelSize, t.tickUnix, t.tick)
 		if err != nil {
 			log.Error("can not create a new file")
 			return err
@@ -110,7 +111,7 @@ func (t *bigHandTimeWheel) Add(event *Event) error {
 func (t *bigHandTimeWheel) Lookup() (*File, bool) {
 	t.bucketIndex = (t.bucketIndex + 1) % t.wheelSize
 	t.curBucket = t.curBucket.Next()
-	t.unix = time.Now().Unix()
+
 	// circle queue
 	if t.curBucket == nil {
 		t.curBucket = t.head

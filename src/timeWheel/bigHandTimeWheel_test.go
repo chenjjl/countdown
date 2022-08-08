@@ -24,13 +24,14 @@ func TestBigHandTimeWheel_Lookup(t *testing.T) {
 
 	eventMap := make(map[string]uint64)
 
-	n := 10
+	n := 100
 	timeRandLimit := 60
 	time.Sleep(5 * time.Second)
 
 	rand.Seed(time.Now().UnixNano())
-	start := time.Now().UnixMilli()
+	//start := time.Now().UnixMilli()
 	for i := 0; i < n; i++ {
+		//time.Sleep(time.Duration(rand.Intn(20)) * time.Second)
 		randTime := rand.Intn(timeRandLimit) + 60
 		event, err := NewEvent("topic1", "tag"+strconv.Itoa(i), time.Duration(randTime)*time.Second)
 		if err != nil {
@@ -42,6 +43,7 @@ func TestBigHandTimeWheel_Lookup(t *testing.T) {
 			t.Error(err)
 		}
 	}
+
 	i := 0
 	totalOffset := int64(0)
 	for i < n {
@@ -49,9 +51,8 @@ func TestBigHandTimeWheel_Lookup(t *testing.T) {
 		i += 1
 		end := time.Now().UnixMilli()
 		expectExp := eventMap[_event.Tags]
-		log.Infof("actual expiration is %d, offset is %d", expectExp, end-start)
-		log.Infof("start is %d, end is %d", start, end)
-		totalOffset += int64(math.Abs(float64(end-start))) - int64(expectExp)
+		log.Infof("expected expiration is %d, actual expiration is %d", expectExp, end-_event.AddBhUnix)
+		totalOffset += int64(math.Abs(float64(end-_event.AddBhUnix))) - int64(expectExp)
 	}
 	t.Logf("total message num is %d, average offset is %d", n, totalOffset/int64(n))
 }
