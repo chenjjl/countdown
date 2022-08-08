@@ -66,12 +66,13 @@ func newFile(expiration time.Duration, round uint64, unix int64, tick uint64) (*
 	}, nil
 }
 
-func (f *File) addEvent(event *Event) error {
+func (f *File) addEvent(event *Event, tickUnix int64) error {
 	file, err := os.OpenFile(dirName+f.fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, os.ModeAppend|os.ModePerm)
 	if err != nil {
 		return err
 	}
 	event.AddBhUnix = time.Now().UnixMilli()
+	event.TickOffset = uint64(event.AddBhUnix - tickUnix)
 	_, err = file.WriteString(event.toString() + ",")
 	if err != nil {
 		return err
@@ -79,7 +80,7 @@ func (f *File) addEvent(event *Event) error {
 	return nil
 }
 
-func (f *File) getEvents(tickUnix int64) ([]*Event, error) {
+func (f *File) getEvents() ([]*Event, error) {
 	data, err := os.ReadFile(dirName + f.fileName)
 	if err != nil {
 		return nil, err
@@ -90,7 +91,7 @@ func (f *File) getEvents(tickUnix int64) ([]*Event, error) {
 		return nil, err
 	}
 	for _, event := range eventArr {
-		event.Expiration = event.Expiration%(f.tick*uint64(time.Second.Milliseconds())) + uint64(event.AddBhUnix-tickUnix)
+		event.Expiration = event.Expiration%(f.tick*uint64(time.Second.Milliseconds())) + event.TickOffset
 	}
 	return eventArr, nil
 }

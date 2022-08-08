@@ -55,7 +55,7 @@ func (t *bigHandTimeWheel) Start() {
 func (t *bigHandTimeWheel) doLookup() {
 	file, ok := t.Lookup()
 	if ok {
-		events, err := file.getEvents(t.tickUnix)
+		events, err := file.getEvents()
 		if err != nil {
 			log.Error(err)
 		}
@@ -63,8 +63,6 @@ func (t *bigHandTimeWheel) doLookup() {
 		if err != nil {
 			log.Error(err)
 		}
-		// fixme debug
-		log.Infof("big hand time wheel lookup")
 	}
 	t.tickUnix = time.Now().UnixMilli()
 }
@@ -101,7 +99,7 @@ func (t *bigHandTimeWheel) Add(event *Event) error {
 			return err
 		}
 	}
-	if err = file.addEvent(event); err != nil {
+	if err = file.addEvent(event, t.tickUnix); err != nil {
 		log.Error("can not add event to file")
 		return err
 	}
