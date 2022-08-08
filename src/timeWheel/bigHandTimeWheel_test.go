@@ -27,8 +27,8 @@ func TestBigHandTimeWheel_Lookup(t *testing.T) {
 	eventMap := make(map[string]uint64)
 
 	n := 10
-	timeRandLimit := 60
-	time.Sleep(5 * time.Second)
+	timeRandLimit := 500
+	time.Sleep(3 * time.Second)
 
 	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < n; i++ {

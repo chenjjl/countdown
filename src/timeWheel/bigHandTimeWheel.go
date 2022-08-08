@@ -79,13 +79,14 @@ func (t *bigHandTimeWheel) Add(event *Event) error {
 		_bucket = _bucket.Next()
 	}
 	bucket := (_bucket.Value).(*bigHandBucket)
-	file, err := bucket.LookupWithoutRemove()
+	fileRound := e / t.wheelSize
+	file, err := bucket.LookupFiles(fileRound)
 	if err != nil {
 		log.Error("can not lookup files")
 		return err
 	}
 	if file == nil {
-		file, err = createFile(time.Duration(_expiration)*time.Second, e/t.wheelSize, t.tickUnix, t.tick)
+		file, err = createFile(time.Duration(_expiration)*time.Second, fileRound, t.tickUnix, t.tick)
 		if err != nil {
 			log.Error("can not create a new file")
 			return err
@@ -93,6 +94,7 @@ func (t *bigHandTimeWheel) Add(event *Event) error {
 		if index == t.bucketIndex {
 			file.curRound += 1
 		}
+		log.Infof("create file %+v, index = %d, bucketIndex = %d, fileRound = %d", file, index, t.bucketIndex, fileRound)
 		err := bucket.Add(file)
 		if err != nil {
 			log.Error("can not add a new file")

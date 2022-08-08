@@ -33,15 +33,14 @@ func (b *bigHandBucket) Lookup() (*File, error) {
 	return nil, nil
 }
 
-func (b *bigHandBucket) LookupWithoutRemove() (*File, error) {
+func (b *bigHandBucket) LookupFiles(round uint64) (*File, error) {
 	var n *list.Element
 	for e := b.files.Front(); e != nil; e = n {
 		file := (e.Value).(*File)
 		n = e.Next()
-		if file.curRound == file.round {
+		if file.round == round {
 			return file, nil
 		}
-		file.curRound += 1
 	}
 	return nil, nil
 }

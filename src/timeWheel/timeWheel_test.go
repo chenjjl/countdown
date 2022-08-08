@@ -16,12 +16,13 @@ func TestTimeWheel_Lookup(t *testing.T) {
 	startUnixMap := make(map[string]int64)
 	eventMap := make(map[string]uint64)
 	rand.Seed(time.Now().UnixNano())
-	//timeRandLimit := 700
-	n := 1
+	timeRandLimit := 700
+	n := 10
 	for i := 0; i < n; i++ {
 		i := i
 		go func() {
-			randTime := 360 //rand.Intn(timeRandLimit) + 1
+			time.Sleep(time.Duration(i) * time.Second)
+			randTime := rand.Intn(timeRandLimit) + 1
 			event, err := NewEvent("topic1", "tag"+strconv.Itoa(i), time.Duration(randTime)*time.Second)
 			if err != nil {
 				t.Error(err)

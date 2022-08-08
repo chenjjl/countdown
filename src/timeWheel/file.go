@@ -53,7 +53,7 @@ func newFile(expiration time.Duration, round uint64, unix int64, tick uint64) (*
 	if _expiration < 1 {
 		return nil, errors.New("Expiration of file must be equal or greater than 1 minute")
 	}
-	fileName := unix + int64(expiration)
+	fileName := unix + int64(expiration)/time.Millisecond.Milliseconds()
 	return &File{
 		element: element{
 			round:      round,
