@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-const dirName = "/Users/edy/IdeaProjects/countdown" + dirPrefix
-const dirPrefix string = "/eventLog/"
+const dirName = "C:\\Users\\chen\\workSpace\\countdown" + dirPrefix
+const dirPrefix string = "\\eventLog\\"
 
 type File struct {
 	element

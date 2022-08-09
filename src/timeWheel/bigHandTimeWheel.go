@@ -3,6 +3,7 @@ package timeWheel
 import (
 	"container/list"
 	"errors"
+	"sync"
 	"time"
 )
 
@@ -11,6 +12,7 @@ type bigHandTimeWheel struct {
 
 	*littleHandTimeWheel
 	tickUnix int64 // unix of each tick
+	mu       sync.Mutex
 }
 
 func NewBigHandTimeWheel(tick time.Duration, wheelSize uint64, lilHandTimeWheel *littleHandTimeWheel) *bigHandTimeWheel {
@@ -65,9 +67,12 @@ func (t *bigHandTimeWheel) doLookup() {
 		}
 	}
 	t.tickUnix = time.Now().UnixMilli()
+	log.Infof("big hand time wheel tick unix is %d", t.tickUnix)
 }
 
 func (t *bigHandTimeWheel) Add(event *Event) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	_expiration := event.Expiration / uint64(time.Second.Milliseconds())
 	if _expiration < t.tick {
 		return nil

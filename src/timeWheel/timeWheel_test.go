@@ -21,7 +21,7 @@ func TestTimeWheel_Lookup(t *testing.T) {
 	for i := 0; i < n; i++ {
 		i := i
 		go func() {
-			time.Sleep(time.Duration(i) * time.Second)
+			time.Sleep(time.Duration(rand.Intn(3)) * time.Second)
 			randTime := rand.Intn(timeRandLimit) + 1
 			event, err := NewEvent("topic1", "tag"+strconv.Itoa(i), time.Duration(randTime)*time.Second)
 			if err != nil {

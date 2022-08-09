@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"countdown/src/logger"
 	"errors"
+	"sync"
 	"time"
 )
 
@@ -11,7 +12,8 @@ var log = logger.GetLogger("timeWheel")
 
 type littleHandTimeWheel struct {
 	wheel
-	c chan *Event
+	c  chan *Event
+	mu sync.Mutex
 }
 
 func NewLittleHandTimeWheel(tick time.Duration, wheelSize uint64) *littleHandTimeWheel {
@@ -62,6 +64,8 @@ func (t *littleHandTimeWheel) doLookup() {
 }
 
 func (t *littleHandTimeWheel) Add(event ...*Event) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	var err error
 	for _, item := range event {
 		e := item.Expiration / t.tick
@@ -85,6 +89,8 @@ func (t *littleHandTimeWheel) Add(event ...*Event) error {
 }
 
 func (t *littleHandTimeWheel) Lookup() ([]*Event, bool) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	t.bucketIndex = (t.bucketIndex + 1) % t.wheelSize
 	t.curBucket = t.curBucket.Next()
 	// circle queue

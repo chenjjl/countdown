@@ -21,7 +21,7 @@ func TestLittleHandTimeWheel_Add(t *testing.T) {
 func TestLittleHandTimeWheel_Lookup(t *testing.T) {
 	go lilTimeWheel.Start()
 
-	n := 10
+	n := 100000
 	timeRandLimit := 10
 	time.Sleep(4 * time.Second)
 	rand.Seed(time.Now().UnixNano())
