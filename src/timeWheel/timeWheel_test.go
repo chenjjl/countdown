@@ -44,7 +44,7 @@ func TestTimeWheel_Lookup(t *testing.T) {
 		end := time.Now().UnixMilli()
 		expectExp := eventMap[_event.Topic+"-"+_event.Tags]
 		startUnix := startUnixMap[_event.Topic+"-"+_event.Tags]
-		log.Infof("expected expiration is %d, actual expiration is %d", expectExp, end-startUnix)
+		log.Infof("event %+v, expected expiration is %d, actual expiration is %d", _event, expectExp, end-startUnix)
 		totalOffset += int64(math.Abs(float64(end-startUnix))) - int64(expectExp)
 	}
 	t.Logf("total message num is %d, average offset is %d", n, totalOffset/int64(n))

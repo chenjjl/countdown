@@ -94,7 +94,7 @@ func (t *bigHandTimeWheel) Add(event *Event) error {
 		if index == t.bucketIndex {
 			file.curRound += 1
 		}
-		log.Infof("create file %+v, index = %d, bucketIndex = %d, fileRound = %d", file, index, t.bucketIndex, fileRound)
+		log.Infof("create file %+v, index = %d, bucketIndex = %d, event = %+v", file, index, t.bucketIndex, event)
 		err := bucket.Add(file)
 		if err != nil {
 			log.Error("can not add a new file")
@@ -126,5 +126,6 @@ func (t *bigHandTimeWheel) Lookup() (*File, bool) {
 	if file == nil {
 		return nil, false
 	}
+	log.Infof("big hand time wheel lookup bucketIndex = %d, file = %+v", t.bucketIndex, file)
 	return file, true
 }

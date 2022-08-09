@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-const dirName = "C:\\Users\\chen\\workSpace\\countdown" + dirPrefix
-const dirPrefix string = "\\eventLog\\"
+const dirName = "/Users/edy/IdeaProjects/countdown" + dirPrefix
+const dirPrefix string = "/eventLog/"
 
 type File struct {
 	element
@@ -53,7 +53,7 @@ func newFile(expiration time.Duration, round uint64, unix int64, tick uint64) (*
 	if _expiration < 1 {
 		return nil, errors.New("Expiration of file must be equal or greater than 1 minute")
 	}
-	fileName := unix + int64(expiration)/time.Millisecond.Milliseconds()
+	fileName := unix + int64(expiration/time.Millisecond)
 	return &File{
 		element: element{
 			round:      round,

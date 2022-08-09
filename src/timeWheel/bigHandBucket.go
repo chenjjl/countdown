@@ -2,6 +2,7 @@ package timeWheel
 
 import (
 	"container/list"
+	"errors"
 )
 
 type bigHandBucket struct {
@@ -21,16 +22,23 @@ func (b *bigHandBucket) Add(file *File) error {
 
 func (b *bigHandBucket) Lookup() (*File, error) {
 	var n *list.Element
+	var fileRes *File
+	var count int
 	for e := b.files.Front(); e != nil; e = n {
 		file := (e.Value).(*File)
 		n = e.Next()
 		if file.curRound == file.round {
 			b.files.Remove(e)
-			return file, nil
+			fileRes = file
+
+			count++
+			if count > 1 {
+				return nil, errors.New("bucket has the same round file")
+			}
 		}
 		file.curRound += 1
 	}
-	return nil, nil
+	return fileRes, nil
 }
 
 func (b *bigHandBucket) LookupFiles(round uint64) (*File, error) {

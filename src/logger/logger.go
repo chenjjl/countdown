@@ -1,6 +1,9 @@
 package logger
 
-import "github.com/sirupsen/logrus"
+import (
+	"github.com/sirupsen/logrus"
+	"os"
+)
 
 var loggers = make(map[string]*logger)
 
@@ -21,5 +24,14 @@ func GetLogger(name string) *logger {
 func newLogger(name string) *logger {
 	logger := &logger{Logger: *logrus.New(), name: name}
 	logger.SetReportCaller(true)
+	logger.SetLevel(logrus.DebugLevel)
+
+	fileName := "/Users/edy/IdeaProjects/countdown/log/log.txt"
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		logger.Error("failed to log to file")
+	} else {
+		logger.Out = file
+	}
 	return logger
 }

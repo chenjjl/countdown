@@ -16,7 +16,7 @@ func NewLittleHandBucket() *littleHandBucket {
 
 func (b *littleHandBucket) Add(event *Event) error {
 	b.events.PushBack(event)
-	log.Infof("add event %+v", event)
+	log.Infof("add event to little hand time wheel %+v", event)
 	return nil
 }
 
