@@ -18,7 +18,7 @@ func NewTimeWheel(lhTick time.Duration, lhWheelSize uint64, bhTick time.Duration
 func (t *TimeWheel) Start() {
 	go t.bigHandTimeWheel.Start()
 	go t.lilHandTimeWheel.Start()
-	time.Sleep(3 * time.Second) // wait to start up
+	time.Sleep(5 * time.Second) // wait to start up
 }
 
 func (t *TimeWheel) Add(event *Event) error {

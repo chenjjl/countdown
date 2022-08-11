@@ -3,6 +3,7 @@ package timeWheel
 import (
 	"container/list"
 	"errors"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -44,7 +45,7 @@ func NewBigHandTimeWheel(tick time.Duration, wheelSize uint64, lilHandTimeWheel 
 func (t *bigHandTimeWheel) Start() {
 	ticker := time.NewTicker(time.Duration(t.tick) * time.Second)
 	defer ticker.Stop()
-	t.tickUnix = time.Now().UnixMilli()
+	t.tickUnix = time.Now().Unix() * time.Second.Milliseconds()
 	log.Infof("big hand's ticker has started, tick is %d sec", t.tick)
 	for {
 		select {
@@ -66,7 +67,7 @@ func (t *bigHandTimeWheel) doLookup() {
 			log.Error(err)
 		}
 	}
-	t.tickUnix = time.Now().UnixMilli()
+	t.tickUnix = time.Now().Unix() * time.Second.Milliseconds()
 	log.Infof("big hand time wheel tick unix is %d", t.tickUnix)
 }
 
@@ -75,23 +76,31 @@ func (t *bigHandTimeWheel) Add(event *Event) error {
 	defer t.mu.Unlock()
 	_expiration := event.Expiration / uint64(time.Second.Milliseconds())
 	if _expiration < t.tick {
-		return nil
+		return errors.New("fail to add event that expiration smaller than tick to big hand time wheel")
 	}
-	e := _expiration / t.tick
+	event.AddBhUnix = time.Now().UnixMilli()
+	tickOffset := uint64(event.AddBhUnix - t.tickUnix)
+	_tickOffset := tickOffset / uint64(time.Second.Milliseconds())
+	e := (_expiration + _tickOffset) / t.tick
+	// get current bucket
 	index := (e + t.bucketIndex) % t.wheelSize
 	_bucket := t.head
 	for i := uint64(0); i < index; i++ {
 		_bucket = _bucket.Next()
 	}
 	bucket := (_bucket.Value).(*bigHandBucket)
+
 	fileRound := e / t.wheelSize
-	file, err := bucket.LookupFiles(fileRound)
+	fileName := strconv.FormatUint(uint64(t.tickUnix)+e*t.tick*uint64(time.Second.Milliseconds()), 10)
+	log.Infof("fileName: %s, tickUnix: %d, _expiration: %d, tickOffset: %d, tick: %d", fileName, t.tickUnix, _expiration, _tickOffset, t.tick)
+	// find whether bucket that has file with the same name be exist
+	file, err := bucket.LookupFiles(fileName)
 	if err != nil {
 		log.Error("can not lookup files")
 		return err
 	}
 	if file == nil {
-		file, err = createFile(time.Duration(_expiration)*time.Second, fileRound, t.tickUnix, t.tick)
+		file, err = createFile(time.Duration(_expiration)*time.Second, fileRound, fileName, t.tick)
 		if err != nil {
 			log.Error("can not create a new file")
 			return err
@@ -99,14 +108,14 @@ func (t *bigHandTimeWheel) Add(event *Event) error {
 		if index == t.bucketIndex {
 			file.curRound += 1
 		}
-		log.Infof("create file %+v, index = %d, bucketIndex = %d, event = %+v", file, index, t.bucketIndex, event)
+		log.Infof("create file %+v, index = %d, bucketIndex = %d", file, index, t.bucketIndex)
 		err := bucket.Add(file)
 		if err != nil {
 			log.Error("can not add a new file")
 			return err
 		}
 	}
-	if err = file.addEvent(event, t.tickUnix); err != nil {
+	if err = file.addEvent(event, tickOffset); err != nil {
 		log.Error("can not add event to file")
 		return err
 	}
@@ -114,6 +123,8 @@ func (t *bigHandTimeWheel) Add(event *Event) error {
 }
 
 func (t *bigHandTimeWheel) Lookup() (*File, bool) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	t.bucketIndex = (t.bucketIndex + 1) % t.wheelSize
 	t.curBucket = t.curBucket.Next()
 

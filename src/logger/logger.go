@@ -26,7 +26,7 @@ func newLogger(name string) *logger {
 	logger.SetReportCaller(true)
 	logger.SetLevel(logrus.DebugLevel)
 
-	fileName := "C:\\Users\\chen\\workSpace\\countdown\\log\\log.txt"
+	fileName := "/tmp/countdown/log/log.txt"
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		logger.Error("failed to log to file")

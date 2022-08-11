@@ -16,12 +16,12 @@ func TestTimeWheel_Lookup(t *testing.T) {
 	startUnixMap := make(map[string]int64)
 	eventMap := make(map[string]uint64)
 	rand.Seed(time.Now().UnixNano())
-	timeRandLimit := 700
-	n := 10
+	timeRandLimit := 5 * 60 * 60
+	n := 10000
 	for i := 0; i < n; i++ {
 		i := i
 		go func() {
-			time.Sleep(time.Duration(rand.Intn(3)) * time.Second)
+			time.Sleep(time.Duration(rand.Intn(5*60*60)) * time.Second)
 			randTime := rand.Intn(timeRandLimit) + 1
 			event, err := NewEvent("topic1", "tag"+strconv.Itoa(i), time.Duration(randTime)*time.Second)
 			if err != nil {
@@ -31,8 +31,10 @@ func TestTimeWheel_Lookup(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
+			mu.Lock()
 			startUnixMap[event.Topic+"-"+event.Tags] = time.Now().UnixMilli()
 			eventMap[event.Topic+"-"+event.Tags] = event.Expiration
+			mu.Unlock()
 		}()
 	}
 
@@ -44,8 +46,10 @@ func TestTimeWheel_Lookup(t *testing.T) {
 		end := time.Now().UnixMilli()
 		expectExp := eventMap[_event.Topic+"-"+_event.Tags]
 		startUnix := startUnixMap[_event.Topic+"-"+_event.Tags]
-		log.Infof("event %+v, expected expiration is %d, actual expiration is %d", _event, expectExp, end-startUnix)
-		totalOffset += int64(math.Abs(float64(end-startUnix))) - int64(expectExp)
+		actualExp := float64(end - startUnix)
+		offset := actualExp - float64(expectExp)
+		log.Infof("event %+v, expected expiration is %d, actual expiration is %f, abs offset >= 500ms is %t, offset is %f", _event, expectExp, actualExp, math.Abs(offset) >= 500, offset)
+		totalOffset += int64(offset)
 	}
 	t.Logf("total message num is %d, average offset is %d", n, totalOffset/int64(n))
 }
