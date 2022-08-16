@@ -1,6 +1,8 @@
 package timeWheel
 
 import (
+	event2 "countdown/src/event"
+	uuid "github.com/satori/go.uuid"
 	"math"
 	"math/rand"
 	"strconv"
@@ -11,7 +13,7 @@ import (
 var lilTimeWheel = NewLittleHandTimeWheel(time.Second, 8)
 
 func TestLittleHandTimeWheel_Add(t *testing.T) {
-	var event, _ = NewEvent("Topic", "tag1", 8*time.Second)
+	var event, _ = event2.NewEvent("Topic", "tag1", uuid.NewV4().String(), 8*time.Second)
 	err := lilTimeWheel.Add(event)
 	if err != nil {
 		t.Error(err)
@@ -28,7 +30,7 @@ func TestLittleHandTimeWheel_Lookup(t *testing.T) {
 	start := time.Now().UnixMilli()
 	for i := 0; i < n; i++ {
 		randTime := rand.Intn(timeRandLimit) + 1
-		event, err := NewEvent("topic1", "tag"+strconv.Itoa(i), time.Duration(randTime)*time.Second)
+		event, err := event2.NewEvent("topic1", "tag"+strconv.Itoa(i), uuid.NewV4().String(), time.Duration(randTime)*time.Second)
 		if err != nil {
 			t.Error(err)
 		}

@@ -2,7 +2,10 @@ package timeWheel
 
 import (
 	"container/list"
+	"countdown/src/logger"
 )
+
+var log = logger.GetLogger("timeWheel")
 
 type wheel struct {
 	tick        uint64
@@ -13,8 +16,8 @@ type wheel struct {
 	head        *list.Element
 }
 
-type element struct {
-	round      uint64
-	curRound   uint64
+type Element struct {
+	Round      uint64
+	CurRound   uint64
 	Expiration uint64
 }

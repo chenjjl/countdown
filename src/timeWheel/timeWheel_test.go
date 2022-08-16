@@ -1,6 +1,8 @@
 package timeWheel
 
 import (
+	event2 "countdown/src/event"
+	"github.com/satori/go.uuid"
 	"math"
 	"math/rand"
 	"strconv"
@@ -23,7 +25,8 @@ func TestTimeWheel_Lookup(t *testing.T) {
 		go func() {
 			time.Sleep(time.Duration(rand.Intn(5*60*60)) * time.Second)
 			randTime := rand.Intn(timeRandLimit) + 1
-			event, err := NewEvent("topic1", "tag"+strconv.Itoa(i), time.Duration(randTime)*time.Second)
+			id := uuid.NewV4().String()
+			event, err := event2.NewEvent("topic1", "tag"+strconv.Itoa(i), id, time.Duration(randTime)*time.Second)
 			if err != nil {
 				t.Error(err)
 			}
@@ -44,8 +47,10 @@ func TestTimeWheel_Lookup(t *testing.T) {
 		_event := <-timeWheel.lilHandTimeWheel.c
 		i += 1
 		end := time.Now().UnixMilli()
+		mu.Lock()
 		expectExp := eventMap[_event.Topic+"-"+_event.Tags]
 		startUnix := startUnixMap[_event.Topic+"-"+_event.Tags]
+		mu.Unlock()
 		actualExp := float64(end - startUnix)
 		offset := actualExp - float64(expectExp)
 		log.Infof("event %+v, expected expiration is %d, actual expiration is %f, abs offset >= 500ms is %t, offset is %f", _event, expectExp, actualExp, math.Abs(offset) >= 500, offset)

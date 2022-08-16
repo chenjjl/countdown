@@ -1,6 +1,9 @@
 package timeWheel
 
-import "time"
+import (
+	"countdown/src/event"
+	"time"
+)
 
 type TimeWheel struct {
 	lilHandTimeWheel *littleHandTimeWheel
@@ -21,7 +24,11 @@ func (t *TimeWheel) Start() {
 	time.Sleep(5 * time.Second) // wait to start up
 }
 
-func (t *TimeWheel) Add(event *Event) error {
+// startUp load event from file
+func (t *TimeWheel) startUp() {
+}
+
+func (t *TimeWheel) Add(event *event.Event) error {
 	if event.Expiration/uint64(time.Second.Milliseconds()) >= t.bigHandTimeWheel.tick {
 		err := t.bigHandTimeWheel.Add(event)
 		if err != nil {
