@@ -80,32 +80,30 @@ func (t *littleHandTimeWheel) doLookup() {
 	}
 }
 
-func (t *littleHandTimeWheel) Add(event ...*event.Event) error {
+func (t *littleHandTimeWheel) Add(event *event.Event) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	var err error
-	for _, item := range event {
-		e := item.Expiration / t.tick
-		item.Round = e / t.wheelSize
-		index := (e + t.bucketIndex) % t.wheelSize
-		_bucket := t.head
-		for i := uint64(0); i < index; i++ {
-			_bucket = _bucket.Next()
-		}
-		bucket := (_bucket.Value).(*littleHandBucket)
-		if index == t.bucketIndex {
-			item.CurRound += 1
-		}
-		err := t.lhFile.AddEvent(item, t.tickRound)
-		if err != nil {
-			log.Errorf("failed to add event %+v to little hand file %+v", item, t.lhFile)
-			return err
-		}
-		err = bucket.Add(item)
-		if err != nil {
-			log.Error("add event to bucket fail")
-			return err
-		}
+	e := event.Expiration / t.tick
+	event.Round = e / t.wheelSize
+	index := (e + t.bucketIndex) % t.wheelSize
+	_bucket := t.head
+	for i := uint64(0); i < index; i++ {
+		_bucket = _bucket.Next()
+	}
+	bucket := (_bucket.Value).(*littleHandBucket)
+	if index == t.bucketIndex {
+		event.CurRound += 1
+	}
+	err = t.lhFile.AddEvent(event, t.tickRound)
+	if err != nil {
+		log.Errorf("failed to add event %+v to little hand file %+v", event, t.lhFile)
+		return err
+	}
+	err = bucket.Add(event)
+	if err != nil {
+		log.Error("add event to bucket fail")
+		return err
 	}
 	return err
 }

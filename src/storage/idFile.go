@@ -21,7 +21,7 @@ type item struct {
 func CreateEventIdFile() (*IdFile, error) {
 	err := CreateDir()
 	if err != nil {
-		log.Errorf("can not create file for little hand time wheel, because failed to create dir %s", DirName)
+		log.Errorf("can not create file for little hand time wheel, because failed to create dir %s", dirName)
 	}
 	file, err := newEventIdFile()
 	if err != nil {
@@ -37,7 +37,7 @@ func newEventIdFile() (*IdFile, error) {
 }
 
 func (f *IdFile) Add(event *event.Event) error {
-	file, err := os.OpenFile(DirName+f.Name, os.O_WRONLY|os.O_CREATE|os.O_APPEND, os.ModeAppend|os.ModePerm)
+	file, err := os.OpenFile(dirName+f.Name, os.O_WRONLY|os.O_CREATE|os.O_APPEND, os.ModeAppend|os.ModePerm)
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {

@@ -4,6 +4,8 @@ import (
 	"countdown/src/timeWheel"
 	"encoding/json"
 	"errors"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -43,4 +45,43 @@ func NewEvent(topic string, tags string, id string, expiration time.Duration) (*
 func (e *Event) ToString() string {
 	data, _ := json.Marshal(e)
 	return string(data)
+}
+
+func (e *Event) Encode() string {
+	var builder strings.Builder
+	builder.WriteString(e.Id)
+	builder.WriteByte('-')
+	builder.WriteString(e.Topic)
+	builder.WriteByte('-')
+	builder.WriteString(e.Tags)
+	builder.WriteByte('-')
+	builder.WriteString(strconv.FormatUint(e.TickRound, 10))
+	builder.WriteByte('-')
+	builder.WriteString(strconv.FormatUint(e.TickOffset, 10))
+	builder.WriteByte('-')
+	builder.WriteString(strconv.FormatUint(e.CurRound, 10))
+	builder.WriteByte('-')
+	builder.WriteString(strconv.FormatInt(e.AddBhUnix, 10))
+	builder.WriteByte('-')
+	builder.WriteString(strconv.FormatUint(e.Expiration, 10))
+	builder.WriteByte('-')
+	builder.WriteString(strconv.FormatUint(e.Round, 10))
+	builder.WriteByte('-')
+
+	return builder.String()
+}
+
+func Decode(s string) *Event {
+	data := strings.Split(s, "-")
+	var event *Event
+	event.Id = data[0]
+	event.Topic = data[1]
+	event.Tags = data[2]
+	event.TickRound, _ = strconv.ParseUint(data[3], 10, 64)
+	event.TickOffset, _ = strconv.ParseUint(data[4], 10, 64)
+	event.CurRound, _ = strconv.ParseUint(data[5], 10, 64)
+	event.AddBhUnix, _ = strconv.ParseInt(data[6], 10, 64)
+	event.Expiration, _ = strconv.ParseUint(data[7], 10, 64)
+	event.Round, _ = strconv.ParseUint(data[8], 10, 64)
+	return event
 }

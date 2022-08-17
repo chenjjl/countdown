@@ -60,11 +60,14 @@ func (t *bigHandTimeWheel) Start() {
 func (t *bigHandTimeWheel) doLookup() {
 	file, ok := t.Lookup()
 	if ok {
-		events, err := file.GetEvents()
+		err := file.GetEvents(t.littleHandTimeWheel.Add)
 		if err != nil {
 			log.Error(err)
 		}
-		err = t.littleHandTimeWheel.Add(events...)
+		err = file.Remove()
+		if err != nil {
+			log.Error(err)
+		}
 		if err != nil {
 			log.Error(err)
 		}
