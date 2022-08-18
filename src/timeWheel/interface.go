@@ -15,9 +15,3 @@ type wheel struct {
 	bucketIndex uint64
 	head        *list.Element
 }
-
-type Element struct {
-	Round      uint64
-	CurRound   uint64
-	Expiration uint64
-}

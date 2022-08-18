@@ -15,16 +15,14 @@ var timeWheel = NewTimeWheel(time.Second, 8, time.Minute, 8)
 func TestTimeWheel_Lookup(t *testing.T) {
 	timeWheel.Start()
 
-	startUnixMap := make(map[string]int64)
-	eventMap := make(map[string]uint64)
 	rand.Seed(time.Now().UnixNano())
-	timeRandLimit := 5 * 60 * 60
-	n := 10000
+	//timeRandLimit := 5 * 60 * 60
+	n := 10
 	for i := 0; i < n; i++ {
 		i := i
 		go func() {
-			time.Sleep(time.Duration(rand.Intn(5*60*60)) * time.Second)
-			randTime := rand.Intn(timeRandLimit) + 1
+			time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
+			randTime := rand.Intn(40) + 20
 			id := uuid.NewV4().String()
 			event, err := event2.NewEvent("topic1", "tag"+strconv.Itoa(i), id, time.Duration(randTime)*time.Second)
 			if err != nil {
@@ -34,10 +32,6 @@ func TestTimeWheel_Lookup(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			mu.Lock()
-			startUnixMap[event.Topic+"-"+event.Tags] = time.Now().UnixMilli()
-			eventMap[event.Topic+"-"+event.Tags] = event.Expiration
-			mu.Unlock()
 		}()
 	}
 
@@ -46,15 +40,10 @@ func TestTimeWheel_Lookup(t *testing.T) {
 	for i < n {
 		_event := <-timeWheel.lilHandTimeWheel.c
 		i += 1
-		end := time.Now().UnixMilli()
-		mu.Lock()
-		expectExp := eventMap[_event.Topic+"-"+_event.Tags]
-		startUnix := startUnixMap[_event.Topic+"-"+_event.Tags]
-		mu.Unlock()
-		actualExp := float64(end - startUnix)
-		offset := actualExp - float64(expectExp)
-		log.Infof("event %+v, expected expiration is %d, actual expiration is %f, abs offset >= 500ms is %t, offset is %f", _event, expectExp, actualExp, math.Abs(offset) >= 500, offset)
-		totalOffset += int64(offset)
+		now := time.Now().UnixMilli()
+		offset := now - int64(_event.ExpirationUnix)
+		log.Infof("event %+v, abs offset >= 500ms is %t, offset is %d", _event, math.Abs(float64(offset)) >= 500, offset)
+		totalOffset += offset
 	}
 	t.Logf("total message num is %d, average offset is %d", n, totalOffset/int64(n))
 }

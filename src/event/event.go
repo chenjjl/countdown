@@ -1,24 +1,28 @@
 package event
 
 import (
-	"countdown/src/timeWheel"
-	"encoding/json"
+	"countdown/src/logger"
 	"errors"
 	"strconv"
 	"strings"
 	"time"
 )
 
+var log = logger.GetLogger("event")
+
 type Event struct {
-	timeWheel.Element
+	Round      uint64
+	CurRound   uint64
+	Expiration uint64
 
 	Topic string
 	Tags  string
 
-	AddBhUnix  int64  // unix of event been added to big hand time wheel
-	TickOffset uint64 // offset from each tick of big hand time wheel
-	TickRound  uint64
-	Id         string // unique event Id
+	AddBhUnix      int64  // unix of event been added to big hand time wheel
+	TickOffset     uint64 // offset from each tick of big hand time wheel
+	TickRound      uint64
+	Id             string // unique event Id
+	ExpirationUnix uint64 // unix of expiration
 }
 
 func NewEvent(topic string, tags string, id string, expiration time.Duration) (*Event, error) {
@@ -30,50 +34,55 @@ func NewEvent(topic string, tags string, id string, expiration time.Duration) (*
 		return nil, errors.New("expiration of event must be greater than 0ms")
 	}
 	return &Event{
-		Element: timeWheel.Element{
-			Round:      0,
-			CurRound:   0,
-			Expiration: _expiration,
-		},
+		Round:      0,
+		CurRound:   0,
+		Expiration: _expiration,
 
-		Topic: topic,
-		Tags:  tags,
-		Id:    id,
+		Topic:          topic,
+		Tags:           tags,
+		Id:             id,
+		ExpirationUnix: _expiration + uint64(time.Now().UnixMilli()),
 	}, nil
 }
 
-func (e *Event) ToString() string {
-	data, _ := json.Marshal(e)
-	return string(data)
+func (e *Event) ResetExpiration() {
+	now := uint64(time.Now().UnixMilli())
+	if now >= e.ExpirationUnix {
+		// todo
+		e.Expiration = 1000
+	} else {
+		e.Expiration = e.ExpirationUnix - now
+	}
 }
 
 func (e *Event) Encode() string {
 	var builder strings.Builder
 	builder.WriteString(e.Id)
-	builder.WriteByte('-')
+	builder.WriteByte('_')
 	builder.WriteString(e.Topic)
-	builder.WriteByte('-')
+	builder.WriteByte('_')
 	builder.WriteString(e.Tags)
-	builder.WriteByte('-')
+	builder.WriteByte('_')
 	builder.WriteString(strconv.FormatUint(e.TickRound, 10))
-	builder.WriteByte('-')
+	builder.WriteByte('_')
 	builder.WriteString(strconv.FormatUint(e.TickOffset, 10))
-	builder.WriteByte('-')
+	builder.WriteByte('_')
 	builder.WriteString(strconv.FormatUint(e.CurRound, 10))
-	builder.WriteByte('-')
+	builder.WriteByte('_')
 	builder.WriteString(strconv.FormatInt(e.AddBhUnix, 10))
-	builder.WriteByte('-')
+	builder.WriteByte('_')
 	builder.WriteString(strconv.FormatUint(e.Expiration, 10))
-	builder.WriteByte('-')
+	builder.WriteByte('_')
 	builder.WriteString(strconv.FormatUint(e.Round, 10))
-	builder.WriteByte('-')
+	builder.WriteByte('_')
+	builder.WriteString(strconv.FormatUint(e.ExpirationUnix, 10))
 
 	return builder.String()
 }
 
 func Decode(s string) *Event {
-	data := strings.Split(s, "-")
-	var event *Event
+	data := strings.Split(strings.Trim(s, ","), "_")
+	event := &Event{}
 	event.Id = data[0]
 	event.Topic = data[1]
 	event.Tags = data[2]
@@ -83,5 +92,6 @@ func Decode(s string) *Event {
 	event.AddBhUnix, _ = strconv.ParseInt(data[6], 10, 64)
 	event.Expiration, _ = strconv.ParseUint(data[7], 10, 64)
 	event.Round, _ = strconv.ParseUint(data[8], 10, 64)
+	event.ExpirationUnix, _ = strconv.ParseUint(data[9], 10, 64)
 	return event
 }

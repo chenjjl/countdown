@@ -47,7 +47,7 @@ func (b *bigHandBucket) LookupFiles(fileName string) (*storage.BhFile, error) {
 	for e := b.files.Front(); e != nil; e = n {
 		file := (e.Value).(*storage.BhFile)
 		n = e.Next()
-		if file.Name == fileName {
+		if file.Name == storage.BhFileNamePrefix+fileName {
 			return file, nil
 		}
 	}

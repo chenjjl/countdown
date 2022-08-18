@@ -1,9 +1,7 @@
 package storage
 
 import (
-	"bufio"
 	"countdown/src/event"
-	"io"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -21,7 +19,7 @@ type LhFile struct {
 func CreateLhFile() (*LhFile, error) {
 	err := CreateDir()
 	if err != nil {
-		log.Errorf("can not create file for little hand time wheel, because failed to create dir %s", dirName)
+		log.Errorf("can not create file for little hand time wheel, because failed to create dir %s", DirName)
 	}
 	file, err := newLhFile()
 	if err != nil {
@@ -39,14 +37,14 @@ func newLhFile() (*LhFile, error) {
 
 func (f *LhFile) AddEvent(event *event.Event, tickRound uint64) error {
 	event.TickRound = tickRound
-	return f.addEvent(dirName+f.Name+strconv.FormatUint(tickRound, 10), event)
+	return f.addEvent(DirName+f.Name+strconv.FormatUint(tickRound, 10), event)
 }
 
-func (f *LhFile) reloadEvents() error {
-	files, err := ioutil.ReadDir(dirName)
+func ReloadLhEvents() ([]*event.Event, error) {
+	files, err := ioutil.ReadDir(DirName)
 	if err != nil {
-		log.Errorf("failed to read dir %s", dirName)
-		return err
+		log.Errorf("failed to read dir %s", DirName)
+		return nil, err
 	}
 	maxRound := int64(0)
 	for _, file := range files {
@@ -58,25 +56,59 @@ func (f *LhFile) reloadEvents() error {
 		}
 	}
 
-	var eventMap map[string]*event.Event
-
-	file, err := os.Open(dirName + f.Name + strconv.FormatInt(maxRound, 10))
-	defer file.Close()
+	eventMap := make(map[string]*event.Event)
+	idItemMap := make(map[string]*idItem)
+	eventFileName := DirName + lhFilePrefixName + strconv.FormatInt(maxRound, 10)
+	idFileName := DirName + eventIdFilePrefixName + strconv.FormatInt(maxRound, 10)
+	err = getEvents(eventFileName, eventMap)
 	if err != nil {
-		log.Errorf("failed to open file %s", dirName+f.Name)
-		return err
+		return nil, err
 	}
-	buf := bufio.NewReader(file)
-	for {
-		line, err := buf.ReadString(',')
+	err = getIdItems(idFileName, idItemMap)
+	if err != nil {
+		return nil, err
+	}
+	eventFileName = DirName + lhFilePrefixName + strconv.FormatInt(maxRound-1, 10)
+	idFileName = DirName + eventIdFilePrefixName + strconv.FormatInt(maxRound-1, 10)
+	if Exists(eventFileName) {
+		err = getEvents(eventFileName, eventMap)
 		if err != nil {
-			if err == io.EOF {
-				return nil
-			}
-			log.Errorf("failed to read line from big hand time wheel file")
-			return err
+			return nil, err
 		}
-		e := event.Decode(line)
-		eventMap[e.Id] = e
+		err = getIdItems(idFileName, idItemMap)
+		if err != nil {
+			return nil, err
+		}
+	}
+	log.Infof("eventMap is %+v", eventMap)
+	log.Infof("idItemMap is %+v", idItemMap)
+	var needReload []*event.Event
+	for _, e := range eventMap {
+		if _, exist := idItemMap[e.Id]; !exist {
+			e.ResetExpiration()
+			needReload = append(needReload, e)
+		}
+	}
+	return needReload, nil
+}
+
+func RemoveLhEventFiles() {
+	files, err := ioutil.ReadDir(DirName)
+	if err != nil {
+		log.Errorf("failed to read dir %s", DirName)
+	}
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), lhFilePrefixName) {
+			err = os.Remove(DirName + file.Name())
+			if err != nil {
+				log.Errorf("failed to remove file %s", file.Name())
+			}
+		}
+		if strings.HasPrefix(file.Name(), eventIdFilePrefixName) {
+			err = os.Remove(DirName + file.Name())
+			if err != nil {
+				log.Errorf("failed to remove file %s", file.Name())
+			}
+		}
 	}
 }
