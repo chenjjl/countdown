@@ -37,7 +37,7 @@ func TestTimeWheel_Lookup(t *testing.T) {
 
 	i := 0
 	totalOffset := int64(0)
-	for i < n {
+	for {
 		_event := <-timeWheel.lilHandTimeWheel.c
 		i += 1
 		now := time.Now().UnixMilli()

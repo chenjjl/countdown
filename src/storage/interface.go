@@ -39,6 +39,9 @@ func (f *EventFile) addEvent(fileName string, event *event.Event) error {
 }
 
 func getEvents(fileName string, eventMap map[string]*event.Event) error {
+	if !Exists(fileName) {
+		return nil
+	}
 	file, err := os.Open(fileName)
 	defer file.Close()
 	if err != nil {

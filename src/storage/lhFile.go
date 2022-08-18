@@ -58,6 +58,7 @@ func ReloadLhEvents() ([]*event.Event, error) {
 
 	eventMap := make(map[string]*event.Event)
 	idItemMap := make(map[string]*idItem)
+
 	eventFileName := DirName + lhFilePrefixName + strconv.FormatInt(maxRound, 10)
 	idFileName := DirName + eventIdFilePrefixName + strconv.FormatInt(maxRound, 10)
 	err = getEvents(eventFileName, eventMap)
@@ -68,20 +69,18 @@ func ReloadLhEvents() ([]*event.Event, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	eventFileName = DirName + lhFilePrefixName + strconv.FormatInt(maxRound-1, 10)
 	idFileName = DirName + eventIdFilePrefixName + strconv.FormatInt(maxRound-1, 10)
-	if Exists(eventFileName) {
-		err = getEvents(eventFileName, eventMap)
-		if err != nil {
-			return nil, err
-		}
-		err = getIdItems(idFileName, idItemMap)
-		if err != nil {
-			return nil, err
-		}
+	err = getEvents(eventFileName, eventMap)
+	if err != nil {
+		return nil, err
 	}
-	log.Infof("eventMap is %+v", eventMap)
-	log.Infof("idItemMap is %+v", idItemMap)
+	err = getIdItems(idFileName, idItemMap)
+	if err != nil {
+		return nil, err
+	}
+
 	var needReload []*event.Event
 	for _, e := range eventMap {
 		if _, exist := idItemMap[e.Id]; !exist {

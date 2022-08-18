@@ -60,6 +60,9 @@ func (f *IdFile) Add(event *event.Event) error {
 }
 
 func getIdItems(fileName string, idItemMap map[string]*idItem) error {
+	if !Exists(fileName) {
+		return nil
+	}
 	file, err := os.Open(fileName)
 	defer file.Close()
 	if err != nil {
