@@ -11,6 +11,7 @@ import (
 )
 
 const BhFileNamePrefix = "bh-"
+const BhFileNameOldPrefix = "o-"
 
 // BhFile event file of big hand time wheel
 type BhFile struct {
@@ -92,10 +93,23 @@ func ReloadBhEvents() ([]*event.Event, error) {
 		log.Errorf("failed to read dir %s", DirName)
 		return nil, err
 	}
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), BhFileNamePrefix) {
+			err = os.Rename(DirName+file.Name(), DirName+BhFileNameOldPrefix+file.Name())
+			if err != nil {
+				log.Errorf("failed to rename file name %s to new file name %s", file.Name(), BhFileNameOldPrefix+file.Name())
+			}
+		}
+	}
+	files, err = ioutil.ReadDir(DirName)
+	if err != nil {
+		log.Errorf("failed to read dir %s", DirName)
+		return nil, err
+	}
 	var needReload []*event.Event
 	for _, file := range files {
 		eventMap := make(map[string]*event.Event)
-		if strings.HasPrefix(file.Name(), BhFileNamePrefix) {
+		if strings.HasPrefix(file.Name(), BhFileNameOldPrefix+BhFileNamePrefix) {
 			err = getEvents(DirName+file.Name(), eventMap)
 			if err != nil {
 				log.Errorf("break loading file %s", file.Name())
@@ -117,7 +131,7 @@ func RemoveBhEventFile() {
 		log.Errorf("failed to read dir %s", DirName)
 	}
 	for _, file := range files {
-		if strings.HasPrefix(file.Name(), BhFileNamePrefix) {
+		if strings.HasPrefix(file.Name(), BhFileNameOldPrefix+BhFileNamePrefix) {
 			err = os.Remove(DirName + file.Name())
 			if err != nil {
 				log.Errorf("failed to remove file %s", file.Name())

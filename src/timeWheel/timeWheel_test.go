@@ -16,13 +16,13 @@ func TestTimeWheel_Lookup(t *testing.T) {
 	timeWheel.Start()
 
 	rand.Seed(time.Now().UnixNano())
-	//timeRandLimit := 5 * 60 * 60
-	n := 10
+	timeRandLimit := 60 * 60
+	n := 10000
 	for i := 0; i < n; i++ {
 		i := i
 		go func() {
-			time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
-			randTime := rand.Intn(40) + 200
+			time.Sleep(time.Duration(rand.Intn(timeRandLimit)) * time.Second)
+			randTime := rand.Intn(timeRandLimit)
 			id := uuid.NewV4().String()
 			event, err := event2.NewEvent("topic1", "tag"+strconv.Itoa(i), id, time.Duration(randTime)*time.Second)
 			if err != nil {

@@ -74,6 +74,7 @@ func (t *bigHandTimeWheel) doLookup() {
 	}
 	t.tickUnix = time.Now().Unix() * time.Second.Milliseconds()
 	t.littleHandTimeWheel.tickRound += 1
+	go storage.RemoveUnusedLhEventFiles(t.littleHandTimeWheel.tickRound)
 	log.Infof("big hand time wheel tick unix is %d, TickRound is %d", t.tickUnix, t.littleHandTimeWheel.tickRound)
 }
 

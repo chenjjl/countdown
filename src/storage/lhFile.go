@@ -91,7 +91,7 @@ func ReloadLhEvents() ([]*event.Event, error) {
 	return needReload, nil
 }
 
-func RemoveLhEventFiles() {
+func RemoveAllLhEventFiles() {
 	files, err := ioutil.ReadDir(DirName)
 	if err != nil {
 		log.Errorf("failed to read dir %s", DirName)
@@ -109,5 +109,55 @@ func RemoveLhEventFiles() {
 				log.Errorf("failed to remove file %s", file.Name())
 			}
 		}
+	}
+}
+
+func RemoveUnusedLhEventFiles(curTickRound uint64) {
+	if curTickRound <= 1 {
+		return
+	}
+	files, err := ioutil.ReadDir(DirName)
+	if err != nil {
+		log.Errorf("failed to read dir %s", DirName)
+	}
+	for _, file := range files {
+		if isUnusedLhEventFiles(file.Name(), curTickRound) || isUnusedEventIdFiles(file.Name(), curTickRound) {
+			err = os.Remove(DirName + file.Name())
+			if err != nil {
+				log.Errorf("failed to remove file %s", file.Name())
+			}
+		}
+	}
+}
+
+func isUnusedLhEventFiles(fileName string, curTickRound uint64) bool {
+	if !strings.HasPrefix(fileName, lhFilePrefixName) {
+		return false
+	}
+	prevTickRound := curTickRound - 1
+	_curTickRound := strconv.FormatUint(curTickRound, 10)
+	_prevTickRound := strconv.FormatUint(prevTickRound, 10)
+
+	lhFileRound := strings.TrimPrefix(fileName, lhFilePrefixName)
+	if lhFileRound == _curTickRound || lhFileRound == _prevTickRound {
+		return false
+	} else {
+		return true
+	}
+}
+
+func isUnusedEventIdFiles(fileName string, curTickRound uint64) bool {
+	if !strings.HasPrefix(fileName, eventIdFilePrefixName) {
+		return false
+	}
+	prevTickRound := curTickRound - 1
+	_curTickRound := strconv.FormatUint(curTickRound, 10)
+	_prevTickRound := strconv.FormatUint(prevTickRound, 10)
+
+	eventFileRound := strings.TrimPrefix(fileName, eventIdFilePrefixName)
+	if eventFileRound == _curTickRound || eventFileRound == _prevTickRound {
+		return false
+	} else {
+		return true
 	}
 }

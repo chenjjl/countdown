@@ -49,7 +49,7 @@ func (t *TimeWheel) startUp() {
 		}
 	}
 	log.Infof("reload little hand time wheel successful, num of reload events is %d", len(needReload))
-	go storage.RemoveLhEventFiles()
+	go storage.RemoveAllLhEventFiles()
 	// reload from big hand time wheel file
 	go func() {
 		needReload, err = storage.ReloadBhEvents()
