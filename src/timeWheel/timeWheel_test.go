@@ -22,7 +22,7 @@ func TestTimeWheel_Lookup(t *testing.T) {
 		i := i
 		go func() {
 			time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
-			randTime := rand.Intn(40) + 20
+			randTime := rand.Intn(40) + 200
 			id := uuid.NewV4().String()
 			event, err := event2.NewEvent("topic1", "tag"+strconv.Itoa(i), id, time.Duration(randTime)*time.Second)
 			if err != nil {

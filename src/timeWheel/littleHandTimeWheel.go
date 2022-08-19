@@ -100,6 +100,7 @@ func (t *littleHandTimeWheel) Add(event *event.Event) error {
 		log.Errorf("failed to add event %+v to little hand file %+v", event, t.lhFile)
 		return err
 	}
+	log.Infof("[debug] index=%d, bucketIndex=%d", index, t.bucketIndex)
 	err = bucket.Add(event)
 	if err != nil {
 		log.Error("add event to bucket fail")

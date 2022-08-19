@@ -27,7 +27,7 @@ func (b *littleHandBucket) Lookup() ([]*event.Event, error) {
 	for e := b.events.Front(); e != nil; e = n {
 		event := (e.Value).(*event.Event)
 		n = e.Next()
-		if event.CurRound == event.Round {
+		if event.CurRound >= event.Round {
 			b.events.Remove(e)
 			eventsRes = append(eventsRes, event)
 		} else {

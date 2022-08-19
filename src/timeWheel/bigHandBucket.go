@@ -27,7 +27,7 @@ func (b *bigHandBucket) Lookup() (*storage.BhFile, error) {
 	for e := b.files.Front(); e != nil; e = n {
 		file := (e.Value).(*storage.BhFile)
 		n = e.Next()
-		if file.CurRound == file.Round {
+		if file.CurRound >= file.Round {
 			b.files.Remove(e)
 
 			count++
