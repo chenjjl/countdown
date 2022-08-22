@@ -9,7 +9,7 @@ import (
 
 func getEvents() (*Event, error) {
 	id := uuid.NewV4().String()
-	event, err := NewEvent("topic", "tag1", id, time.Duration(10)*time.Second)
+	event, err := NewEvent("topic", "tag1", nil, id, time.Duration(10)*time.Second)
 	if err != nil {
 		return nil, err
 	}

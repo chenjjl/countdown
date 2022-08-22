@@ -15,7 +15,7 @@ var bigTimeWheel = NewBigHandTimeWheel(time.Minute, 8, lilTimeWheel)
 var mu = sync.Mutex{}
 
 func TestBigHandTimeWheel_Add(t *testing.T) {
-	var event, _ = event2.NewEvent("Topic", "tag1", uuid.NewV4().String(), 1*time.Minute)
+	var event, _ = event2.NewEvent("Topic", "tag1", nil, uuid.NewV4().String(), 1*time.Minute)
 	err := bigTimeWheel.Add(event)
 	if err != nil {
 		t.Error(err)
@@ -38,7 +38,7 @@ func TestBigHandTimeWheel_Lookup(t *testing.T) {
 		go func() {
 			time.Sleep(time.Duration(rand.Intn(20)) * time.Second)
 			randTime := rand.Intn(timeRandLimit) + 60
-			event, err := event2.NewEvent("topic1", "tag"+strconv.Itoa(i), uuid.NewV4().String(), time.Duration(randTime)*time.Second)
+			event, err := event2.NewEvent("topic1", "tag"+strconv.Itoa(i), nil, uuid.NewV4().String(), time.Duration(randTime)*time.Second)
 			if err != nil {
 				t.Error(err)
 			}
