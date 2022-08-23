@@ -18,7 +18,7 @@ type littleHandTimeWheel struct {
 	mu          sync.Mutex
 }
 
-func NewLittleHandTimeWheel(tick time.Duration, wheelSize uint64) *littleHandTimeWheel {
+func newLittleHandTimeWheel(tick time.Duration, wheelSize uint64) *littleHandTimeWheel {
 	_tick := uint64(tick / time.Millisecond)
 	if _tick <= 0 {
 		panic(errors.New("little hand's tick must be greater than 0ms"))
@@ -28,7 +28,7 @@ func NewLittleHandTimeWheel(tick time.Duration, wheelSize uint64) *littleHandTim
 	}
 	buckets := list.New()
 	for i := uint64(0); i < wheelSize; i++ {
-		bucket := NewLittleHandBucket()
+		bucket := newLittleHandBucket()
 		buckets.PushBack(bucket)
 	}
 	lhFile, err := storage.CreateLhFile()
@@ -55,7 +55,7 @@ func NewLittleHandTimeWheel(tick time.Duration, wheelSize uint64) *littleHandTim
 	}
 }
 
-func (t *littleHandTimeWheel) Start() {
+func (t *littleHandTimeWheel) start() {
 	ticker := time.NewTicker(time.Duration(t.tick) * time.Millisecond)
 	defer ticker.Stop()
 	log.Infof("little hand's ticker has started, tick is %dms", t.tick)
@@ -68,7 +68,7 @@ func (t *littleHandTimeWheel) Start() {
 }
 
 func (t *littleHandTimeWheel) doLookup() {
-	events, ok := t.Lookup()
+	events, ok := t.lookup()
 	if ok {
 		for _, event := range events {
 			t.c <- event
@@ -80,7 +80,7 @@ func (t *littleHandTimeWheel) doLookup() {
 	}
 }
 
-func (t *littleHandTimeWheel) Add(event *event.Event) error {
+func (t *littleHandTimeWheel) add(event *event.Event) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	var err error
@@ -101,7 +101,7 @@ func (t *littleHandTimeWheel) Add(event *event.Event) error {
 		return err
 	}
 	log.Infof("[debug] index=%d, bucketIndex=%d", index, t.bucketIndex)
-	err = bucket.Add(event)
+	err = bucket.add(event)
 	if err != nil {
 		log.Error("add event to bucket fail")
 		return err
@@ -109,7 +109,7 @@ func (t *littleHandTimeWheel) Add(event *event.Event) error {
 	return err
 }
 
-func (t *littleHandTimeWheel) Lookup() ([]*event.Event, bool) {
+func (t *littleHandTimeWheel) lookup() ([]*event.Event, bool) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.bucketIndex = (t.bucketIndex + 1) % t.wheelSize
@@ -120,7 +120,7 @@ func (t *littleHandTimeWheel) Lookup() ([]*event.Event, bool) {
 	}
 
 	bucket := (t.curBucket.Value).(*littleHandBucket)
-	events, err := bucket.Lookup()
+	events, err := bucket.lookup()
 	if err != nil {
 		log.Error(err)
 		return nil, false

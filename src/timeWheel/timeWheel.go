@@ -13,16 +13,16 @@ type TimeWheel struct {
 }
 
 func NewTimeWheel(lhTick time.Duration, lhWheelSize uint64, bhTick time.Duration, bhWheelSize uint64) *TimeWheel {
-	lilHandTimeWheel := NewLittleHandTimeWheel(lhTick, lhWheelSize)
+	lilHandTimeWheel := newLittleHandTimeWheel(lhTick, lhWheelSize)
 	return &TimeWheel{
 		lilHandTimeWheel: lilHandTimeWheel,
-		bigHandTimeWheel: NewBigHandTimeWheel(bhTick, bhWheelSize, lilHandTimeWheel),
+		bigHandTimeWheel: newBigHandTimeWheel(bhTick, bhWheelSize, lilHandTimeWheel),
 	}
 }
 
 func (t *TimeWheel) Start() {
-	go t.bigHandTimeWheel.Start()
-	go t.lilHandTimeWheel.Start()
+	go t.bigHandTimeWheel.start()
+	go t.lilHandTimeWheel.start()
 	time.Sleep(5 * time.Second) // wait to start
 	t.startUp()
 }
@@ -70,13 +70,13 @@ func (t *TimeWheel) startUp() {
 
 func (t *TimeWheel) Add(event *event.Event) error {
 	if event.Expiration/uint64(time.Second.Milliseconds()) >= t.bigHandTimeWheel.tick {
-		err := t.bigHandTimeWheel.Add(event)
+		err := t.bigHandTimeWheel.add(event)
 		if err != nil {
 			log.Error("add event to big hand time wheel fail")
 			return err
 		}
 	} else {
-		err := t.lilHandTimeWheel.Add(event)
+		err := t.lilHandTimeWheel.add(event)
 		if err != nil {
 			log.Error("add event to little hand time wheel fail")
 			return err

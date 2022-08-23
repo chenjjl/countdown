@@ -10,18 +10,18 @@ import (
 	"time"
 )
 
-var lilTimeWheel = NewLittleHandTimeWheel(time.Second, 8)
+var lilTimeWheel = newLittleHandTimeWheel(time.Second, 8)
 
 func TestLittleHandTimeWheel_Add(t *testing.T) {
 	var event, _ = event2.NewEvent("Topic", "tag1", nil, uuid.NewV4().String(), 8*time.Second)
-	err := lilTimeWheel.Add(event)
+	err := lilTimeWheel.add(event)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestLittleHandTimeWheel_Lookup(t *testing.T) {
-	go lilTimeWheel.Start()
+	go lilTimeWheel.start()
 
 	n := 100
 	timeRandLimit := 30
@@ -34,7 +34,7 @@ func TestLittleHandTimeWheel_Lookup(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		err = lilTimeWheel.Add(event)
+		err = lilTimeWheel.add(event)
 		if err != nil {
 			t.Error(err)
 		}

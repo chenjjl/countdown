@@ -9,19 +9,19 @@ type littleHandBucket struct {
 	events *list.List
 }
 
-func NewLittleHandBucket() *littleHandBucket {
+func newLittleHandBucket() *littleHandBucket {
 	return &littleHandBucket{
 		events: list.New(),
 	}
 }
 
-func (b *littleHandBucket) Add(event *event.Event) error {
+func (b *littleHandBucket) add(event *event.Event) error {
 	b.events.PushBack(event)
 	log.Infof("add event to little hand time wheel %+v", event)
 	return nil
 }
 
-func (b *littleHandBucket) Lookup() ([]*event.Event, error) {
+func (b *littleHandBucket) lookup() ([]*event.Event, error) {
 	var eventsRes []*event.Event
 	var n *list.Element
 	for e := b.events.Front(); e != nil; e = n {

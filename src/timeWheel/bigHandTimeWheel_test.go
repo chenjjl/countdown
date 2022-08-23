@@ -11,20 +11,20 @@ import (
 	"time"
 )
 
-var bigTimeWheel = NewBigHandTimeWheel(time.Minute, 8, lilTimeWheel)
+var bigTimeWheel = newBigHandTimeWheel(time.Minute, 8, lilTimeWheel)
 var mu = sync.Mutex{}
 
 func TestBigHandTimeWheel_Add(t *testing.T) {
 	var event, _ = event2.NewEvent("Topic", "tag1", nil, uuid.NewV4().String(), 1*time.Minute)
-	err := bigTimeWheel.Add(event)
+	err := bigTimeWheel.add(event)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestBigHandTimeWheel_Lookup(t *testing.T) {
-	go bigTimeWheel.Start()
-	go lilTimeWheel.Start()
+	go bigTimeWheel.start()
+	go lilTimeWheel.start()
 
 	eventMap := make(map[string]uint64)
 
@@ -45,7 +45,7 @@ func TestBigHandTimeWheel_Lookup(t *testing.T) {
 			mu.Lock()
 			eventMap[event.Tags] = event.Expiration
 			mu.Unlock()
-			err = bigTimeWheel.Add(event)
+			err = bigTimeWheel.add(event)
 			if err != nil {
 				t.Error(err)
 			}

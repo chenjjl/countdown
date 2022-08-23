@@ -9,18 +9,18 @@ type bigHandBucket struct {
 	files *list.List
 }
 
-func NewBigHandBucket() *bigHandBucket {
+func newBigHandBucket() *bigHandBucket {
 	return &bigHandBucket{
 		files: list.New(),
 	}
 }
 
-func (b *bigHandBucket) Add(file *storage.BhFile) error {
+func (b *bigHandBucket) add(file *storage.BhFile) error {
 	b.files.PushBack(file)
 	return nil
 }
 
-func (b *bigHandBucket) Lookup() (*storage.BhFile, error) {
+func (b *bigHandBucket) lookup() (*storage.BhFile, error) {
 	var n *list.Element
 	var fileRes *storage.BhFile
 	var count int
@@ -42,7 +42,7 @@ func (b *bigHandBucket) Lookup() (*storage.BhFile, error) {
 	return fileRes, nil
 }
 
-func (b *bigHandBucket) LookupFiles(fileName string) (*storage.BhFile, error) {
+func (b *bigHandBucket) lookupFiles(fileName string) (*storage.BhFile, error) {
 	var n *list.Element
 	for e := b.files.Front(); e != nil; e = n {
 		file := (e.Value).(*storage.BhFile)

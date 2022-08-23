@@ -18,7 +18,7 @@ type bigHandTimeWheel struct {
 	mu       sync.Mutex
 }
 
-func NewBigHandTimeWheel(tick time.Duration, wheelSize uint64, lilHandTimeWheel *littleHandTimeWheel) *bigHandTimeWheel {
+func newBigHandTimeWheel(tick time.Duration, wheelSize uint64, lilHandTimeWheel *littleHandTimeWheel) *bigHandTimeWheel {
 	_tick := uint64(tick / time.Second)
 	if _tick < 60 {
 		panic(errors.New("big hand's tick must be equal or greater than 1 minute"))
@@ -28,7 +28,7 @@ func NewBigHandTimeWheel(tick time.Duration, wheelSize uint64, lilHandTimeWheel 
 	}
 	buckets := list.New()
 	for i := uint64(0); i < wheelSize; i++ {
-		bucket := NewBigHandBucket()
+		bucket := newBigHandBucket()
 		buckets.PushBack(bucket)
 	}
 	return &bigHandTimeWheel{
@@ -44,7 +44,7 @@ func NewBigHandTimeWheel(tick time.Duration, wheelSize uint64, lilHandTimeWheel 
 	}
 }
 
-func (t *bigHandTimeWheel) Start() {
+func (t *bigHandTimeWheel) start() {
 	ticker := time.NewTicker(time.Duration(t.tick) * time.Second)
 	defer ticker.Stop()
 	t.tickUnix = time.Now().Unix() * time.Second.Milliseconds()
@@ -58,9 +58,9 @@ func (t *bigHandTimeWheel) Start() {
 }
 
 func (t *bigHandTimeWheel) doLookup() {
-	file, ok := t.Lookup()
+	file, ok := t.lookup()
 	if ok {
-		err := file.GetEvents(t.littleHandTimeWheel.Add)
+		err := file.GetEvents(t.littleHandTimeWheel.add)
 		if err != nil {
 			log.Error(err)
 		}
@@ -78,7 +78,7 @@ func (t *bigHandTimeWheel) doLookup() {
 	log.Infof("big hand time wheel tick unix is %d, TickRound is %d", t.tickUnix, t.littleHandTimeWheel.tickRound)
 }
 
-func (t *bigHandTimeWheel) Add(event *event.Event) error {
+func (t *bigHandTimeWheel) add(event *event.Event) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	_expiration := event.Expiration / uint64(time.Second.Milliseconds())
@@ -100,7 +100,7 @@ func (t *bigHandTimeWheel) Add(event *event.Event) error {
 	fileRound := e / t.wheelSize
 	fileName := strconv.FormatUint(uint64(t.tickUnix)+e*t.tick*uint64(time.Second.Milliseconds()), 10)
 	// find whether bucket that has file with the same name be exist
-	file, err := bucket.LookupFiles(fileName)
+	file, err := bucket.lookupFiles(fileName)
 	if err != nil {
 		log.Error("can not lookup files")
 		return err
@@ -115,7 +115,7 @@ func (t *bigHandTimeWheel) Add(event *event.Event) error {
 			file.CurRound += 1
 		}
 		log.Infof("create file %+v, index = %d, bucketIndex = %d", file, index, t.bucketIndex)
-		err := bucket.Add(file)
+		err := bucket.add(file)
 		if err != nil {
 			log.Error("can not add a new file")
 			return err
@@ -128,7 +128,7 @@ func (t *bigHandTimeWheel) Add(event *event.Event) error {
 	return nil
 }
 
-func (t *bigHandTimeWheel) Lookup() (*storage.BhFile, bool) {
+func (t *bigHandTimeWheel) lookup() (*storage.BhFile, bool) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.bucketIndex = (t.bucketIndex + 1) % t.wheelSize
@@ -140,7 +140,7 @@ func (t *bigHandTimeWheel) Lookup() (*storage.BhFile, bool) {
 	}
 
 	bucket := (t.curBucket.Value).(*bigHandBucket)
-	file, err := bucket.Lookup()
+	file, err := bucket.lookup()
 	if err != nil {
 		log.Error(err)
 		return nil, false
