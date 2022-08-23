@@ -2,13 +2,24 @@ package server
 
 import (
 	"bufio"
+	"countdown/src/event"
 	"countdown/src/logger"
+	"countdown/src/timeWheel"
+	"io"
 	"net"
+	"time"
 )
 
 var log = logger.GetLogger("server")
 
 type Server struct {
+	timeWheel *timeWheel.TimeWheel
+}
+
+func NewServer() *Server {
+	return &Server{
+		timeWheel: timeWheel.NewTimeWheel(time.Second, 8, time.Minute, 8),
+	}
 }
 
 func (s *Server) Start() {
@@ -25,15 +36,28 @@ func (s *Server) Start() {
 			conn.Close()
 			log.Errorf("failed to accept tcp connection, error is %+v", err)
 		} else {
-			handle(conn)
+			s.handle(conn)
 		}
 	}
 }
 
-func handle(conn net.Conn) {
+func (s *Server) handle(conn net.Conn) {
 	defer conn.Close()
 	for {
 		reader := bufio.NewReader(conn)
-		reader.ReadString
+		data, err := reader.ReadSlice('\n')
+		if err != nil {
+			if err != io.EOF {
+				log.Errorf("failed to receive data from tcp connection")
+				log.Error(err)
+			} else {
+				break
+			}
+		}
+		_event := event.Decode(string(data))
+		err = s.timeWheel.Add(_event)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 }
