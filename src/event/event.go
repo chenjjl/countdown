@@ -16,7 +16,6 @@ type Event struct {
 	Expiration uint64
 
 	Topic string
-	Tags  string
 	Body  []byte
 
 	AddBhUnix      int64  // unix of event been added to big hand time wheel
@@ -26,9 +25,9 @@ type Event struct {
 	ExpirationUnix uint64 // unix of expiration
 }
 
-func NewEvent(topic string, tags string, body []byte, id string, expiration time.Duration) (*Event, error) {
-	if topic == "" || tags == "" {
-		return nil, errors.New("topic or Tags is empty")
+func NewEvent(topic string, body []byte, id string, expiration time.Duration) (*Event, error) {
+	if topic == "" {
+		return nil, errors.New("topic is empty")
 	}
 	_expiration := uint64(expiration / time.Millisecond)
 	if _expiration <= 0 {
@@ -40,7 +39,6 @@ func NewEvent(topic string, tags string, body []byte, id string, expiration time
 		Expiration: _expiration,
 
 		Topic: topic,
-		Tags:  tags,
 		Body:  body,
 
 		Id:             id,
@@ -64,10 +62,8 @@ func (e *Event) Encode() string {
 	builder.WriteByte('_')
 	builder.WriteString(e.Topic)
 	builder.WriteByte('_')
-	builder.WriteString(e.Tags)
-	builder.WriteByte('_')
 	builder.Write(e.Body)
-	builder.WriteByte('-')
+	builder.WriteByte('_')
 	builder.WriteString(strconv.FormatUint(e.TickRound, 10))
 	builder.WriteByte('_')
 	builder.WriteString(strconv.FormatUint(e.TickOffset, 10))
@@ -90,14 +86,13 @@ func Decode(s string) *Event {
 	event := &Event{}
 	event.Id = data[0]
 	event.Topic = data[1]
-	event.Tags = data[2]
-	event.Body = []byte(data[3])
-	event.TickRound, _ = strconv.ParseUint(data[4], 10, 64)
-	event.TickOffset, _ = strconv.ParseUint(data[5], 10, 64)
-	event.CurRound, _ = strconv.ParseUint(data[6], 10, 64)
-	event.AddBhUnix, _ = strconv.ParseInt(data[7], 10, 64)
-	event.Expiration, _ = strconv.ParseUint(data[8], 10, 64)
-	event.Round, _ = strconv.ParseUint(data[9], 10, 64)
-	event.ExpirationUnix, _ = strconv.ParseUint(data[10], 10, 64)
+	event.Body = []byte(data[2])
+	event.TickRound, _ = strconv.ParseUint(data[3], 10, 64)
+	event.TickOffset, _ = strconv.ParseUint(data[4], 10, 64)
+	event.CurRound, _ = strconv.ParseUint(data[5], 10, 64)
+	event.AddBhUnix, _ = strconv.ParseInt(data[6], 10, 64)
+	event.Expiration, _ = strconv.ParseUint(data[7], 10, 64)
+	event.Round, _ = strconv.ParseUint(data[8], 10, 64)
+	event.ExpirationUnix, _ = strconv.ParseUint(data[9], 10, 64)
 	return event
 }

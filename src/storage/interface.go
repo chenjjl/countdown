@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"countdown/src/event"
 	"countdown/src/logger"
+	"countdown/src/utils"
 	"io"
 	"os"
 )
@@ -39,7 +40,7 @@ func (f *EventFile) addEvent(fileName string, event *event.Event) error {
 }
 
 func getEvents(fileName string, eventMap map[string]*event.Event) error {
-	if !Exists(fileName) {
+	if !utils.Exists(fileName) {
 		return nil
 	}
 	file, err := os.Open(fileName)

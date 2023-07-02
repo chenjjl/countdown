@@ -32,7 +32,7 @@ func (b *bigHandBucket) lookup() (*storage.BhFile, error) {
 
 			count++
 			if count > 1 {
-				log.Infof("[same Round file] file %+v first file %+v", file, fileRes)
+				log.Infof("[same Round file] file %+v first file %+v", file.Name, fileRes.Name)
 			}
 			fileRes = file
 		} else {

@@ -3,6 +3,7 @@ package storage
 import (
 	"bufio"
 	"countdown/src/event"
+	"countdown/src/utils"
 	"io"
 	"os"
 	"strconv"
@@ -22,9 +23,9 @@ type idItem struct {
 
 // CreateEventIdFile create file for recording event Id in the current little hand time wheel
 func CreateEventIdFile() (*IdFile, error) {
-	err := CreateDir()
+	err := utils.CreateDir(utils.EventLogDir)
 	if err != nil {
-		log.Errorf("can not create file for little hand time wheel, because failed to create dir %s", DirName)
+		log.Errorf("can not create file for little hand time wheel, because failed to create dir %s", utils.EventLogDir)
 	}
 	file, err := newEventIdFile()
 	if err != nil {
@@ -40,7 +41,7 @@ func newEventIdFile() (*IdFile, error) {
 }
 
 func (f *IdFile) Add(event *event.Event) error {
-	file, err := os.OpenFile(DirName+f.Name+strconv.FormatUint(event.TickRound, 10), os.O_WRONLY|os.O_CREATE|os.O_APPEND, os.ModeAppend|os.ModePerm)
+	file, err := os.OpenFile(utils.EventLogDir+f.Name+strconv.FormatUint(event.TickRound, 10), os.O_WRONLY|os.O_CREATE|os.O_APPEND, os.ModeAppend|os.ModePerm)
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
@@ -60,7 +61,7 @@ func (f *IdFile) Add(event *event.Event) error {
 }
 
 func getIdItems(fileName string, idItemMap map[string]*idItem) error {
-	if !Exists(fileName) {
+	if !utils.Exists(fileName) {
 		return nil
 	}
 	file, err := os.Open(fileName)

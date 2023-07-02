@@ -3,6 +3,7 @@ package timeWheel
 import (
 	"countdown/src/event"
 	"countdown/src/storage"
+	"countdown/src/utils"
 	"io/ioutil"
 	"time"
 )
@@ -29,11 +30,11 @@ func (t *TimeWheel) Start() {
 
 // startUp load event from file
 func (t *TimeWheel) startUp() {
-	files, _ := ioutil.ReadDir(storage.DirName)
+	files, _ := ioutil.ReadDir(utils.EventLogDir)
 	if len(files) == 0 {
 		return
 	}
-	log.Infof("files %+v in the dir %s", files, storage.DirName)
+	log.Infof("files %+v in the dir %s", files, utils.EventLogDir)
 	// reload form little hand time wheel file
 	needReload, err := storage.ReloadLhEvents()
 	if err != nil {

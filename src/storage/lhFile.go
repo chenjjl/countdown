@@ -2,6 +2,7 @@ package storage
 
 import (
 	"countdown/src/event"
+	"countdown/src/utils"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -17,9 +18,9 @@ type LhFile struct {
 
 // CreateLhFile create file for little hand time wheel
 func CreateLhFile() (*LhFile, error) {
-	err := CreateDir()
+	err := utils.CreateDir(utils.EventLogDir)
 	if err != nil {
-		log.Errorf("can not create file for little hand time wheel, because failed to create dir %s", DirName)
+		log.Errorf("can not create file for little hand time wheel, because failed to create dir %s", utils.EventLogDir)
 	}
 	file, err := newLhFile()
 	if err != nil {
@@ -37,13 +38,13 @@ func newLhFile() (*LhFile, error) {
 
 func (f *LhFile) AddEvent(event *event.Event, tickRound uint64) error {
 	event.TickRound = tickRound
-	return f.addEvent(DirName+f.Name+strconv.FormatUint(tickRound, 10), event)
+	return f.addEvent(utils.EventLogDir+f.Name+strconv.FormatUint(tickRound, 10), event)
 }
 
 func ReloadLhEvents() ([]*event.Event, error) {
-	files, err := ioutil.ReadDir(DirName)
+	files, err := ioutil.ReadDir(utils.EventLogDir)
 	if err != nil {
-		log.Errorf("failed to read dir %s", DirName)
+		log.Errorf("failed to read dir %s", utils.EventLogDir)
 		return nil, err
 	}
 	maxRound := int64(0)
@@ -59,8 +60,8 @@ func ReloadLhEvents() ([]*event.Event, error) {
 	eventMap := make(map[string]*event.Event)
 	idItemMap := make(map[string]*idItem)
 
-	eventFileName := DirName + lhFilePrefixName + strconv.FormatInt(maxRound, 10)
-	idFileName := DirName + eventIdFilePrefixName + strconv.FormatInt(maxRound, 10)
+	eventFileName := utils.EventLogDir + lhFilePrefixName + strconv.FormatInt(maxRound, 10)
+	idFileName := utils.EventLogDir + eventIdFilePrefixName + strconv.FormatInt(maxRound, 10)
 	err = getEvents(eventFileName, eventMap)
 	if err != nil {
 		return nil, err
@@ -70,8 +71,8 @@ func ReloadLhEvents() ([]*event.Event, error) {
 		return nil, err
 	}
 
-	eventFileName = DirName + lhFilePrefixName + strconv.FormatInt(maxRound-1, 10)
-	idFileName = DirName + eventIdFilePrefixName + strconv.FormatInt(maxRound-1, 10)
+	eventFileName = utils.EventLogDir + lhFilePrefixName + strconv.FormatInt(maxRound-1, 10)
+	idFileName = utils.EventLogDir + eventIdFilePrefixName + strconv.FormatInt(maxRound-1, 10)
 	err = getEvents(eventFileName, eventMap)
 	if err != nil {
 		return nil, err
@@ -92,19 +93,19 @@ func ReloadLhEvents() ([]*event.Event, error) {
 }
 
 func RemoveAllLhEventFiles() {
-	files, err := ioutil.ReadDir(DirName)
+	files, err := ioutil.ReadDir(utils.EventLogDir)
 	if err != nil {
-		log.Errorf("failed to read dir %s", DirName)
+		log.Errorf("failed to read dir %s", utils.EventLogDir)
 	}
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), lhFilePrefixName) {
-			err = os.Remove(DirName + file.Name())
+			err = os.Remove(utils.EventLogDir + file.Name())
 			if err != nil {
 				log.Errorf("failed to remove file %s", file.Name())
 			}
 		}
 		if strings.HasPrefix(file.Name(), eventIdFilePrefixName) {
-			err = os.Remove(DirName + file.Name())
+			err = os.Remove(utils.EventLogDir + file.Name())
 			if err != nil {
 				log.Errorf("failed to remove file %s", file.Name())
 			}
@@ -116,13 +117,13 @@ func RemoveUnusedLhEventFiles(curTickRound uint64) {
 	if curTickRound <= 1 {
 		return
 	}
-	files, err := ioutil.ReadDir(DirName)
+	files, err := ioutil.ReadDir(utils.EventLogDir)
 	if err != nil {
-		log.Errorf("failed to read dir %s", DirName)
+		log.Errorf("failed to read dir %s", utils.EventLogDir)
 	}
 	for _, file := range files {
 		if isUnusedLhEventFiles(file.Name(), curTickRound) || isUnusedEventIdFiles(file.Name(), curTickRound) {
-			err = os.Remove(DirName + file.Name())
+			err = os.Remove(utils.EventLogDir + file.Name())
 			if err != nil {
 				log.Errorf("failed to remove file %s", file.Name())
 			}

@@ -3,6 +3,7 @@ package storage
 import (
 	"bufio"
 	"countdown/src/event"
+	"countdown/src/utils"
 	"io"
 	"io/ioutil"
 	"os"
@@ -20,9 +21,9 @@ type BhFile struct {
 
 // CreateBhFile create file for big hand time wheel
 func CreateBhFile(expiration time.Duration, round uint64, fileName string, tick uint64) (*BhFile, error) {
-	err := CreateDir()
+	err := utils.CreateDir(utils.EventLogDir)
 	if err != nil {
-		log.Errorf("can not create file for little hand time wheel, because failed to create dir %s", DirName)
+		log.Errorf("can not create file for little hand time wheel, because failed to create dir %s", utils.EventLogDir)
 		return nil, err
 	}
 	file, err := newBhFile(expiration, round, fileName, tick)
@@ -49,14 +50,14 @@ func newBhFile(expiration time.Duration, round uint64, fileName string, tick uin
 
 func (f *BhFile) AddEvent(event *event.Event, tickOffset uint64) error {
 	event.TickOffset = tickOffset
-	return f.addEvent(DirName+f.Name, event)
+	return f.addEvent(utils.EventLogDir+f.Name, event)
 }
 
 func (f *EventFile) GetEvents(handle func(*event.Event) error) error {
-	file, err := os.Open(DirName + f.Name)
+	file, err := os.Open(utils.EventLogDir + f.Name)
 	defer file.Close()
 	if err != nil {
-		log.Errorf("failed to open file %s", DirName+f.Name)
+		log.Errorf("failed to open file %s", utils.EventLogDir+f.Name)
 		return err
 	}
 	buf := bufio.NewReader(file)
@@ -79,7 +80,7 @@ func (f *EventFile) GetEvents(handle func(*event.Event) error) error {
 }
 
 func (f *EventFile) Remove() error {
-	err := os.Remove(DirName + f.Name)
+	err := os.Remove(utils.EventLogDir + f.Name)
 	if err != nil {
 		log.Errorf("failed to remove file %s", f.Name)
 		return err
@@ -88,29 +89,29 @@ func (f *EventFile) Remove() error {
 }
 
 func ReloadBhEvents() ([]*event.Event, error) {
-	files, err := ioutil.ReadDir(DirName)
+	files, err := ioutil.ReadDir(utils.EventLogDir)
 	if err != nil {
-		log.Errorf("failed to read dir %s", DirName)
+		log.Errorf("failed to read dir %s", utils.EventLogDir)
 		return nil, err
 	}
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), BhFileNamePrefix) {
-			err = os.Rename(DirName+file.Name(), DirName+BhFileNameOldPrefix+file.Name())
+			err = os.Rename(utils.EventLogDir+file.Name(), utils.EventLogDir+BhFileNameOldPrefix+file.Name())
 			if err != nil {
 				log.Errorf("failed to rename file name %s to new file name %s", file.Name(), BhFileNameOldPrefix+file.Name())
 			}
 		}
 	}
-	files, err = ioutil.ReadDir(DirName)
+	files, err = ioutil.ReadDir(utils.EventLogDir)
 	if err != nil {
-		log.Errorf("failed to read dir %s", DirName)
+		log.Errorf("failed to read dir %s", utils.EventLogDir)
 		return nil, err
 	}
 	var needReload []*event.Event
 	for _, file := range files {
 		eventMap := make(map[string]*event.Event)
 		if strings.HasPrefix(file.Name(), BhFileNameOldPrefix+BhFileNamePrefix) {
-			err = getEvents(DirName+file.Name(), eventMap)
+			err = getEvents(utils.EventLogDir+file.Name(), eventMap)
 			if err != nil {
 				log.Errorf("break loading file %s", file.Name())
 				log.Error(err)
@@ -126,13 +127,13 @@ func ReloadBhEvents() ([]*event.Event, error) {
 }
 
 func RemoveBhEventFile() {
-	files, err := ioutil.ReadDir(DirName)
+	files, err := ioutil.ReadDir(utils.EventLogDir)
 	if err != nil {
-		log.Errorf("failed to read dir %s", DirName)
+		log.Errorf("failed to read dir %s", utils.EventLogDir)
 	}
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), BhFileNameOldPrefix+BhFileNamePrefix) {
-			err = os.Remove(DirName + file.Name())
+			err = os.Remove(utils.EventLogDir + file.Name())
 			if err != nil {
 				log.Errorf("failed to remove file %s", file.Name())
 			}

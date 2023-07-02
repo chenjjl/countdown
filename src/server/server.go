@@ -2,9 +2,11 @@ package server
 
 import (
 	"bufio"
+	_const "countdown/src/const"
 	"countdown/src/event"
 	"countdown/src/logger"
 	"countdown/src/timeWheel"
+	"encoding/binary"
 	"io"
 	"net"
 	"time"
@@ -36,7 +38,7 @@ func (s *Server) Start() {
 			conn.Close()
 			log.Errorf("failed to accept tcp connection, error is %+v", err)
 		} else {
-			s.handle(conn)
+			go s.handle(conn)
 		}
 	}
 }
@@ -56,8 +58,20 @@ func (s *Server) handle(conn net.Conn) {
 		}
 		_event := event.Decode(string(data))
 		err = s.timeWheel.Add(_event)
+		var status []byte
 		if err != nil {
 			log.Error(err)
+			binary.BigEndian.PutUint32(status, _const.FAIL)
+			_, err = conn.Write(status)
+			if err != nil {
+				log.Error(err)
+			}
+		} else {
+			binary.BigEndian.PutUint32(status, _const.SUCCESS)
+			_, err = conn.Write(status)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}
 }

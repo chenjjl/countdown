@@ -118,6 +118,7 @@ func (t *littleHandTimeWheel) lookup() ([]*event.Event, bool) {
 	defer t.mu.Unlock()
 	t.bucketIndex = (t.bucketIndex + 1) % t.wheelSize
 	t.curBucket = t.curBucket.Next()
+	log.Infof("current bucket index = %d", t.bucketIndex)
 	// circle queue
 	if t.curBucket == nil {
 		t.curBucket = t.head
