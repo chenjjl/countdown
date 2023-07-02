@@ -58,6 +58,8 @@ func (t *bigHandTimeWheel) start() {
 }
 
 func (t *bigHandTimeWheel) doLookup() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	file, ok := t.lookup()
 	if ok {
 		err := file.GetEvents(t.littleHandTimeWheel.add)
@@ -114,7 +116,7 @@ func (t *bigHandTimeWheel) add(event *event.Event) error {
 		if index == t.bucketIndex {
 			file.CurRound += 1
 		}
-		log.Infof("create file %+v, index = %d, bucketIndex = %d", file, index, t.bucketIndex)
+		log.Infof("create file %+v, index = %d, bucketIndex = %d", file.Name, index, t.bucketIndex)
 		err := bucket.add(file)
 		if err != nil {
 			log.Error("can not add a new file")
@@ -129,8 +131,6 @@ func (t *bigHandTimeWheel) add(event *event.Event) error {
 }
 
 func (t *bigHandTimeWheel) lookup() (*storage.BhFile, bool) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
 	t.bucketIndex = (t.bucketIndex + 1) % t.wheelSize
 	t.curBucket = t.curBucket.Next()
 
@@ -148,6 +148,6 @@ func (t *bigHandTimeWheel) lookup() (*storage.BhFile, bool) {
 	if file == nil {
 		return nil, false
 	}
-	log.Infof("big hand time wheel lookup bucketIndex = %d, file = %+v", t.bucketIndex, file)
+	log.Infof("big hand time wheel lookup bucketIndex = %d, file = %+v", t.bucketIndex, file.Name)
 	return file, true
 }
