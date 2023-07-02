@@ -85,6 +85,10 @@ func (t *littleHandTimeWheel) add(event *event.Event) error {
 	defer t.mu.Unlock()
 	var err error
 	e := event.Expiration / t.tick
+	// if expiration less than tick, then next tick execute the event
+	if e == 0 {
+		e += 1
+	}
 	event.Round = e / t.wheelSize
 	index := (e + t.bucketIndex) % t.wheelSize
 	_bucket := t.head
